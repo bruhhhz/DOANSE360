@@ -9,7 +9,7 @@ export function verifyToken(req, res, next) {
     console.warn('⚠️ Không có token → tạo user giả để test nội bộ');
     req.user = { sub: req.body?.userId || 1, role: 'user' };
     console.log('[auth] fake user gán cho req.user =', req.user);
-    return next(); // 🔥 PHẢI CÓ
+    return next();
   }
 
   try {
