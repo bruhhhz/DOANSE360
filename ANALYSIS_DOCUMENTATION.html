@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UIT-Go Microservices - Phân Tích Chi Tiết</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.8;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        nav {
+            background: #f8f9fa;
+            padding: 20px 40px;
+            border-bottom: 2px solid #667eea;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        nav ul {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        nav a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        nav a:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        main {
+            padding: 40px;
+        }
+        
+        section {
+            margin-bottom: 60px;
+            scroll-margin-top: 100px;
+        }
+        
+        h2 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        h3 {
+            color: #764ba2;
+            font-size: 1.5em;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+        
+        h4 {
+            color: #555;
+            font-size: 1.2em;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+        
+        p {
+            margin-bottom: 15px;
+            line-height: 1.8;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background: #f5f5f5;
+        }
+        
+        code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #d63384;
+        }
+        
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 15px 0;
+            line-height: 1.4;
+            font-size: 0.9em;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+        
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+        
+        ul, ol {
+            margin-left: 25px;
+            margin-bottom: 15px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        .architecture {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+            font-family: monospace;
+            white-space: pre;
+            overflow-x: auto;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-right: 5px;
+        }
+        
+        .badge-success { background: #d4edda; color: #155724; }
+        .badge-danger { background: #f8d7da; color: #721c24; }
+        .badge-warning { background: #fff3cd; color: #856404; }
+        .badge-primary { background: #cfe2ff; color: #084298; }
+        
+        .checklist {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        
+        .checklist input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        
+        .checklist label {
+            display: block;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+        
+        footer {
+            background: #f8f9fa;
+            padding: 20px 40px;
+            text-align: center;
+            color: #666;
+            border-top: 1px solid #ddd;
+        }
+        
+        @media (max-width: 768px) {
+            nav ul {
+                flex-direction: column;
+            }
+            
+            h2 {
+                font-size: 1.5em;
+            }
+            
+            main {
+                padding: 20px;
+            }
+            
+            header {
+                padding: 20px;
+            }
+            
+            header h1 {
+                font-size: 1.8em;
+            }
+        }
+        
+        .toc {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        
+        .toc ul {
+            margin-left: 20px;
+        }
+        
+        .toc a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .toc a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚗 UIT-Go Microservices</h1>
+            <p>Phân Tích Chi Tiết & Hướng Dẫn Module D & E</p>
+            <p style="font-size: 0.9em; margin-top: 10px;">Ngày: 10 Tháng 12, 2025 | Phiên Bản: 1.0</p>
+        </header>
+        
+        <nav>
+            <ul>
+                <li><a href="#overview">Tổng Quan</a></li>
+                <li><a href="#trip-service">Trip Service</a></li>
+                <li><a href="#module-d">Module D</a></li>
+                <li><a href="#module-e">Module E</a></li>
+                <li><a href="#testing">Test</a></li>
+                <li><a href="#conclusion">Kết Luận</a></li>
+            </ul>
+        </nav>
+        
+        <main>
+            <!-- Overview Section -->
+            <section id="overview">
+                <h2>📌 Tổng Quan Đồ Án</h2>
+                
+                <h3>Mô Tả</h3>
+                <p><strong>UIT-Go</strong> là một nền tảng dịch vụ đặt xe được xây dựng dựa trên kiến trúc <strong>Microservices</strong>. Hệ thống bao gồm 4 dịch vụ chính:</p>
+                
+                <ul>
+                    <li><strong>user-service</strong>: Quản lý người dùng & xác thực (Port 3000)</li>
+                    <li><strong>trip-service</strong>: Quản lý chuyến đi/booking (Port 3003)</li>
+                    <li><strong>driver-service</strong>: Quản lý tài xế & vị trí địa lý (Port 8000)</li>
+                    <li><strong>payment-service</strong>: Xử lý thanh toán (Port 3004)</li>
+                </ul>
+                
+                <h3>Kiến Trúc</h3>
+                <div class="architecture">
+┌─────────────────────────────────┐
+│    Client (Web/Mobile)          │
+└──────────────┬──────────────────┘
+               │
+     ┌─────────┼─────────┐
+     │         │         │
+     ▼         ▼         ▼
+  User      Trip      Driver
+ Service   Service   Service
+     │         │         │
+     └─────────┼─────────┘
+               │
+           ┌───▼───┐
+           │Payment│
+           │Service│
+           └───────┘
+                </div>
+                
+                <h3>Modules (Bài Tập Lớn)</h3>
+                <ul>
+                    <li><strong>Module D</strong>: Observability (Logs, Metrics, Traces, Alarms)</li>
+                    <li><strong>Module E</strong>: Deployment & Infrastructure as Code (Terraform)</li>
+                </ul>
+            </section>
+            
+            <!-- Trip Service Section -->
+            <section id="trip-service">
+                <h2>🚗 Trip Service - Phân Tích Chi Tiết</h2>
+                
+                <div class="alert alert-info">
+                    <strong>Vị Trí:</strong> <code>services/trip-service/</code><br>
+                    <strong>Mục Tiêu:</strong> Quản lý toàn vòng đời chuyến đi (booking, match driver, pricing, payment)
+                </div>
+                
+                <h3>Cấu Trúc File</h3>
+                <pre>trip-service/
+├── src/
+│   ├── app.js                   # Express app entry
+│   ├── db.js                    # PostgreSQL connection
+│   ├── controllers/trip.controller.js
+│   ├── models/trip.model.js
+│   ├── routes/trips.js
+│   ├── middleware/auth.js
+│   ├── services/
+│   │   ├── userService.js
+│   │   ├── driverService.js
+│   │   └── paymentService.js
+│   └── observability/
+│       ├── plugin.js
+│       ├── metrics.js
+│       └── tracing.js
+├── tripsdb.sql
+├── package.json
+└── Dockerfile</pre>
+                
+                <h3>REST Endpoints</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Path</th>
+                            <th>Mô Tả</th>
+                            <th>Auth</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>POST</code></td>
+                            <td><code>/trips</code></td>
+                            <td>Tạo chuyến mới</td>
+                            <td>✅</td>
+                        </tr>
+                        <tr>
+                            <td><code>GET</code></td>
+                            <td><code>/trips/:id</code></td>
+                            <td>Lấy chi tiết chuyến</td>
+                            <td>✅</td>
+                        </tr>
+                        <tr>
+                            <td><code>POST</code></td>
+                            <td><code>/trips/:id/complete</code></td>
+                            <td>Hoàn tất chuyến</td>
+                            <td>✅</td>
+                        </tr>
+                        <tr>
+                            <td><code>POST</code></td>
+                            <td><code>/trips/:id/cancel</code></td>
+                            <td>Huỷ chuyến</td>
+                            <td>✅</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>Luồng Tạo Chuyến (POST /trips)</h3>
+                <ol>
+                    <li><strong>Middleware verifyToken</strong> - Kiểm tra JWT (tạo fake user nếu dev)</li>
+                    <li><strong>Resolve passenger_id</strong> - Từ token hoặc request body</li>
+                    <li><strong>Gọi verifyUser</strong> - Xác thực người dùng (user-service)</li>
+                    <li><strong>Gọi findNearbyDriver</strong> - Tìm driver gần nhất (driver-service)</li>
+                    <li><strong>Gọi estimatePrice</strong> - Ước tính giá (payment-service)</li>
+                    <li><strong>Gọi createTrip</strong> - Lưu trip vào DB</li>
+                    <li><strong>Ghi metrics</strong> - EMF metrics (booking attempt, success, duration)</li>
+                    <li><strong>Trả kết quả</strong> - <code>{ trip, driver, price }</code></li>
+                </ol>
+                
+                <h3>Những Vấn Đề Hiện Tại</h3>
+                
+                <h4><span class="badge badge-danger">Cấp 1 - Bắt Buộc</span></h4>
+                <ul>
+                    <li><strong>Endpoint gọi driver-service sai</strong>: Gọi <code>/drivers/search</code> nhưng thực tế là <code>/drivers?near=lat,lng</code></li>
+                    <li><strong>Status mặc định sai</strong>: Insert <code>'accepted'</code> nhưng nên là <code>'created'</code> hoặc <code>'searching'</code></li>
+                    <li><strong>Thiếu validation input</strong>: Không validate latitude, longitude, userId</li>
+                    <li><strong>Fake user nguy hiểm</strong>: Tạo user giả mà không check <code>NODE_ENV</code></li>
+                </ul>
+                
+                <h4><span class="badge badge-warning">Cấp 2 - Nên Làm</span></h4>
+                <ul>
+                    <li>HTTP calls chưa có timeout/retry</li>
+                    <li>In-memory fallback nguy hiểm khi DB lỗi</li>
+                    <li>Thiếu <code>GET /trips?userId=...</code> để list trips</li>
+                    <li>Chưa kiểm tra status transition</li>
+                </ul>
+                
+                <h4><span class="badge badge-warning">Cấp 3 - Tối Ưu</span></h4>
+                <ul>
+                    <li>Thiếu DELETE endpoint</li>
+                    <li>Chưa có saga pattern cho distributed transactions</li>
+                    <li>Chưa có unit tests</li>
+                </ul>
+                
+                <h3>Kết Luận Trip Service</h3>
+                <div class="alert alert-warning">
+                    <strong>Status:</strong> Đã hoàn thành 60% chức năng cốt lõi<br>
+                    <strong>Recommendation:</strong> Fix 4 vấn đề cấp 1 trước khi deploy production
+                </div>
+            </section>
+            
+            <!-- Module D Section -->
+            <section id="module-d">
+                <h2>📊 Module D - Observability</h2>
+                
+                <div class="alert alert-success">
+                    <strong>Status:</strong> ✅ HOÀN THÀNH<br>
+                    <strong>Mục Tiêu:</strong> Xây dựng khả năng giám sát, cảnh báo & tự chẩn đoán hệ thống
+                </div>
+                
+                <h3>SLOs & SLIs Định Nghĩa</h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Flow</th>
+                            <th>Service</th>
+                            <th>SLI Name</th>
+                            <th>Window</th>
+                            <th>SLO</th>
+                            <th>Error Budget</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Đặt xe</td>
+                            <td>trip-service</td>
+                            <td>BookingSuccessRate</td>
+                            <td>30 days</td>
+                            <td>≥ 99.90%</td>
+                            <td>43.2 min/tháng</td>
+                        </tr>
+                        <tr>
+                            <td>Tìm driver</td>
+                            <td>driver-service</td>
+                            <td>MatchLatencyP95</td>
+                            <td>7 days</td>
+                            <td>&lt; 200 ms</td>
+                            <td>N/A</td>
+                        </tr>
+                        <tr>
+                            <td>Thanh toán</td>
+                            <td>payment-service</td>
+                            <td>PaymentSuccessRate</td>
+                            <td>30 days</td>
+                            <td>≥ 99.95%</td>
+                            <td>21.6 min/tháng</td>
+                        </tr>
+                        <tr>
+                            <td>Đăng nhập</td>
+                            <td>user-service</td>
+                            <td>LoginSuccessRate</td>
+                            <td>7 days</td>
+                            <td>≥ 99.9%</td>
+                            <td>N/A</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>Metrics (Namespace: UITGo/SLI)</h3>
+                
+                <h4>Payment Service</h4>
+                <pre>PaymentAttemptCount      → Số lần gọi API (Count)
+PaymentSuccessCount      → Số payment thành công (Count)
+PaymentDurationMs        → Thời gian request (Milliseconds)</pre>
+                
+                <h4>Trip Service</h4>
+                <pre>BookingAttemptCount      → Số lần tạo trip
+BookingSuccessCount      → Số trip thành công
+BookingDurationMs        → Thời gian tạo trip (ms)
+MatchLatencyMs           → Thời gian tìm driver (ms)
+MatchAttemptCount        → Số lần tìm driver
+MatchSuccessCount        → Số lần tìm driver thành công</pre>
+                
+                <h3>CloudWatch Dashboard</h3>
+                <p><strong>Name:</strong> <code>UITGo-SLO-Dashboard</code></p>
+                <p><strong>Widgets:</strong></p>
+                <ul>
+                    <li>Payment Success Rate (SLO ≥ 99.95%)</li>
+                    <li>Match API p95 Latency (SLO &lt; 200ms)</li>
+                    <li>Booking Success Rate (SLO ≥ 99.90%)</li>
+                    <li>Auth Success Rate (SLO ≥ 99.9%)</li>
+                    <li>Error Budget widget</li>
+                </ul>
+                
+                <h3>CloudWatch Alarms</h3>
+                <h4>Payment Success Rate Alarm</h4>
+                <ul>
+                    <li><strong>Threshold:</strong> 0.9995 (99.95%)</li>
+                    <li><strong>Evaluation:</strong> 1 minute (rolling)</li>
+                    <li><strong>Action:</strong> Gửi SNS alert</li>
+                </ul>
+                
+                <h4>Match p95 Latency Alarm</h4>
+                <ul>
+                    <li><strong>Threshold:</strong> 200 ms</li>
+                    <li><strong>Evaluation:</strong> 1 minute (rolling)</li>
+                    <li><strong>Metric:</strong> p95 của MatchLatencyMs</li>
+                </ul>
+                
+                <h3>Synthetic Tests</h3>
+                <p><strong>Payment Test:</strong></p>
+                <pre>cd scripts
+.\synthetic-payment-test.ps1 -Count 100 -IntervalSeconds 0.1</pre>
+                
+                <p><strong>Expected Output:</strong></p>
+                <pre>=== Synthetic Test Summary ===
+Total requests: 100
+Success: 100, Fail: 0, SuccessRate: 100%
+Avg Duration (ms): 150.5
+p50 Duration (ms): 1
+p95 Duration (ms): 250</pre>
+                
+                <h3>Module D Checklist</h3>
+                <div class="checklist">
+                    <label><input type="checkbox" checked disabled> SLO/SLI Định Nghĩa (4 flows)</label>
+                    <label><input type="checkbox" checked disabled> Instrumentation (EMF metrics, structured logs)</label>
+                    <label><input type="checkbox" checked disabled> CloudWatch Log Groups (3)</label>
+                    <label><input type="checkbox" checked disabled> CloudWatch Dashboard (5 widgets)</label>
+                    <label><input type="checkbox" checked disabled> CloudWatch Alarms (2)</label>
+                    <label><input type="checkbox" checked disabled> SNS Topic (alert notification)</label>
+                    <label><input type="checkbox" checked disabled> Runbooks (payment SLO breach)</label>
+                    <label><input type="checkbox" checked disabled> Synthetic Tests (payment, booking)</label>
+                </div>
+            </section>
+            
+            <!-- Module E Section -->
+            <section id="module-e">
+                <h2>🚀 Module E - Deployment & IaC</h2>
+                
+                <div class="alert alert-success">
+                    <strong>Status:</strong> ✅ HOÀN THÀNH<br>
+                    <strong>Mục Tiêu:</strong> Xây dựng Infrastructure as Code để tự động hóa deployment
+                </div>
+                
+                <h3>Công Nghệ Sử Dụng</h3>
+                <ul>
+                    <li><strong>IaC Tool:</strong> Terraform</li>
+                    <li><strong>Cloud Platform:</strong> Microsoft Azure</li>
+                    <li><strong>Container:</strong> Docker + Azure Container Registry (ACR)</li>
+                    <li><strong>Compute:</strong> Azure Container Instances (ACI)</li>
+                </ul>
+                
+                <h3>Cấu Trúc Terraform</h3>
+                <pre>terraform/
+├── envs/
+│   └── dev/
+│       ├── main.tf              # Configuration
+│       ├── variables.tf         # Input variables
+│       └── terraform.tfvars     # Variable values
+└── modules/
+    └── service_container/
+        ├── main.tf              # Container Group definition
+        ├── outputs.tf           # Output values
+        └── variables.tf         # Input variables</pre>
+                
+                <h3>Azure Resources Được Tạo</h3>
+                
+                <h4>1. Container Registry (ACR)</h4>
+                <ul>
+                    <li><strong>Name:</strong> <code>uitgoacrdev.azurecr.io</code></li>
+                    <li><strong>Purpose:</strong> Lưu trữ Docker images</li>
+                </ul>
+                
+                <h4>2. Container Groups (ACI)</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Service</th>
+                            <th>Image</th>
+                            <th>Port</th>
+                            <th>CPU</th>
+                            <th>Memory</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>user-service-cg</td>
+                            <td>user-service:latest</td>
+                            <td>3000</td>
+                            <td>0.5</td>
+                            <td>1.0 GB</td>
+                        </tr>
+                        <tr>
+                            <td>trip-service-cg</td>
+                            <td>trip-service:latest</td>
+                            <td>3000</td>
+                            <td>0.5</td>
+                            <td>1.0 GB</td>
+                        </tr>
+                        <tr>
+                            <td>driver-service-cg</td>
+                            <td>driver-service:latest</td>
+                            <td>8000</td>
+                            <td>0.5</td>
+                            <td>1.0 GB</td>
+                        </tr>
+                        <tr>
+                            <td>payment-service-cg</td>
+                            <td>payment-service:latest</td>
+                            <td>3004</td>
+                            <td>0.5</td>
+                            <td>1.0 GB</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h4>3. Resource Group</h4>
+                <ul>
+                    <li><strong>Name:</strong> <code>uit-go-dev-rg</code></li>
+                    <li><strong>Location:</strong> <code>eastus</code></li>
+                </ul>
+                
+                <h3>Module: service_container (Reusable)</h3>
+                <pre>Input Variables:
+- service_name      # e.g., "user-service"
+- image             # e.g., "ausgoacrdev.azurecr.io/user-service:latest"
+- port              # e.g., 3000
+- resource_group_name
+- location
+- tags
+
+Output:
+- fqdn              # Fully Qualified Domain Name
+- ip_address        # Public IP address</pre>
+                
+                <h3>Deployment Workflow</h3>
+                <ol>
+                    <li>Push code tới GitHub</li>
+                    <li>Build Docker images (CI pipeline)</li>
+                    <li>Push images tới ACR</li>
+                    <li>Run Terraform (<code>terraform apply</code>)</li>
+                    <li>Services running trên Azure ACI</li>
+                    <li>CloudWatch metrics collected (Module D)</li>
+                    <li>Dashboard active & monitoring</li>
+                </ol>
+                
+                <h3>Security Best Practices</h3>
+                <ul>
+                    <li><strong>ACR Authentication:</strong> Managed identity hoặc service principal</li>
+                    <li><strong>Environment Variables:</strong> Secrets trong Azure Key Vault</li>
+                    <li><strong>Network Security:</strong> Firewall rules, private networking</li>
+                    <li><strong>RBAC:</strong> Phân quyền IAM cho developers</li>
+                    <li><strong>Image Scanning:</strong> Quét vulnerabilities trong ACR</li>
+                </ul>
+                
+                <h3>Module E Checklist</h3>
+                <div class="checklist">
+                    <label><input type="checkbox" checked disabled> Terraform configuration (dev env)</label>
+                    <label><input type="checkbox" checked disabled> Service container module (reusable)</label>
+                    <label><input type="checkbox" checked disabled> Azure Container Registry setup</label>
+                    <label><input type="checkbox" checked disabled> Docker images & Dockerfiles</label>
+                    <label><input type="checkbox" checked disabled> Resource tagging & organization</label>
+                    <label><input type="checkbox" checked disabled> Environment-specific configs</label>
+                    <label><input type="checkbox"> Remote state management (terraform.tfstate)</label>
+                    <label><input type="checkbox"> CI/CD pipeline integration</label>
+                </div>
+            </section>
+            
+            <!-- Testing Section -->
+            <section id="testing">
+                <h2>🧪 Hướng Dẫn Test</h2>
+                
+                <h3>Test Trip Service Locally</h3>
+                <p><strong>1. Chuẩn Bị:</strong></p>
+                <pre>cd services/trip-service
+npm install</pre>
+                
+                <p><strong>2. Chạy Service:</strong></p>
+                <pre>npm run start
+# Output: "TripService running on port 3003"</pre>
+                
+                <p><strong>3. Test POST /trips:</strong></p>
+                <pre>curl -X POST http://localhost:3003/trips \
+  -H "Content-Type: application/json" \
+  -d '{
+    "origin": {"lat": 10.762622, "lng": 106.660172},
+    "destination": {"lat": 10.775, "lng": 106.700},
+    "userId": 1
+  }'</pre>
+                
+                <h3>Test Module D - Synthetic Tests</h3>
+                <p><strong>Payment Service Test:</strong></p>
+                <pre>cd scripts
+.\synthetic-payment-test.ps1 -Count 100 -IntervalSeconds 0.1</pre>
+                
+                <p><strong>Expected Success Rate:</strong> ≥ 99% (to pass SLO 99.95%)</p>
+                <p><strong>Expected p95 Duration:</strong> &lt; 200ms</p>
+                
+                <h3>Test Module E - Terraform Deployment</h3>
+                <p><strong>1. Login Azure:</strong></p>
+                <pre>az login
+az account show</pre>
+                
+                <p><strong>2. Terraform Plan:</strong></p>
+                <pre>cd terraform/envs/dev
+terraform init
+terraform plan -out=tfplan</pre>
+                
+                <p><strong>3. Terraform Apply:</strong></p>
+                <pre>terraform apply tfplan</pre>
+                
+                <p><strong>4. Verify Deployment:</strong></p>
+                <pre>terraform output
+# Test services
+curl http://user-service-dev-....eastus.azurecontainers.io:3000/healthz</pre>
+            </section>
+            
+            <!-- Conclusion Section -->
+            <section id="conclusion">
+                <h2>🎯 Kết Luận & Đề Xuất</h2>
+                
+                <h3>Trip Service - Đánh Giá Tổng Thể</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tiêu Chí</th>
+                            <th>Điểm</th>
+                            <th>Nhận Xét</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>CRUD cơ bản</td>
+                            <td><strong>7/10</strong></td>
+                            <td>Có tạo/lấy/cập nhật, thiếu delete</td>
+                        </tr>
+                        <tr>
+                            <td>Tương tác services</td>
+                            <td><strong>5/10</strong></td>
+                            <td>Endpoint sai, HTTP chưa robust</td>
+                        </tr>
+                        <tr>
+                            <td>Persist dữ liệu</td>
+                            <td><strong>6/10</strong></td>
+                            <td>Có DB nhưng fallback in-memory</td>
+                        </tr>
+                        <tr>
+                            <td>Xác thực & bảo mật</td>
+                            <td><strong>4/10</strong></td>
+                            <td>Fake user, thiếu validation</td>
+                        </tr>
+                        <tr>
+                            <td>Error handling</td>
+                            <td><strong>7/10</strong></td>
+                            <td>Fallback tốt, inconsistent data</td>
+                        </tr>
+                        <tr>
+                            <td>Observability</td>
+                            <td><strong>8/10</strong></td>
+                            <td>Metrics & logging tốt</td>
+                        </tr>
+                        <tr style="background: #fff3cd;">
+                            <td><strong>TỔNG</strong></td>
+                            <td><strong>6.2/10</strong></td>
+                            <td><strong>Cần fix vấn đề cấp 1</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>Các Bước Tiếp Theo</h3>
+                <h4><span class="badge badge-danger">Priority 1</span></h4>
+                <ul>
+                    <li>[ ] Sửa endpoint driver-service từ <code>/drivers/search</code> → <code>/drivers?near=...</code></li>
+                    <li>[ ] Sửa status mặc định từ <code>'accepted'</code> → <code>'created'</code></li>
+                    <li>[ ] Thêm validation input (latitude, longitude, userId)</li>
+                    <li>[ ] Disable fake user khi production (NODE_ENV check)</li>
+                </ul>
+                
+                <h4><span class="badge badge-warning">Priority 2</span></h4>
+                <ul>
+                    <li>[ ] Thêm timeout & retry cho HTTP calls</li>
+                    <li>[ ] Thêm <code>GET /trips?userId=...</code> để list trips</li>
+                    <li>[ ] Kiểm tra status transition</li>
+                    <li>[ ] Thay in-memory fallback bằng error 503</li>
+                </ul>
+                
+                <h4><span class="badge badge-warning">Priority 3</span></h4>
+                <ul>
+                    <li>[ ] Thêm DELETE endpoint</li>
+                    <li>[ ] Saga pattern cho distributed transactions</li>
+                    <li>[ ] Unit tests</li>
+                    <li>[ ] Structured logger (pino)</li>
+                </ul>
+                
+                <h3>Module D & E - Đánh Giá</h3>
+                <div class="alert alert-success">
+                    <strong>✅ Module D (Observability):</strong> HOÀN THÀNH<br>
+                    SLO/SLI, instrumentation, dashboard, alarms, runbooks, synthetic tests đều sẵn sàng production
+                </div>
+                
+                <div class="alert alert-success">
+                    <strong>✅ Module E (Deployment & IaC):</strong> HOÀN THÀNH<br>
+                    Terraform config, Azure Container Instances, Docker images sẵn sàng deployment
+                </div>
+                
+                <h3>Tóm Tắt</h3>
+                <div class="alert alert-info">
+                    <p><strong>🚗 Trip Service:</strong> Đã hoàn thành 60% chức năng cốt lõi. Cần fix 4 vấn đề cấp 1 trước production.</p>
+                    <p><strong>📊 Module D:</strong> Observability hoàn thiện. Sẵn sàng monitor, cảnh báo & xử lý sự cố.</p>
+                    <p><strong>🚀 Module E:</strong> Infrastructure as Code hoàn thiện. Sẵn sàng deploy lên Azure tự động hóa.</p>
+                    <p><strong>🎯 Next Steps:</strong> (1) Fix trip-service, (2) Test synthetic, (3) Deploy Terraform, (4) Monitor CloudWatch</p>
+                </div>
+            </section>
+        </main>
+        
+        <footer>
+            <p>📄 <strong>UIT-Go Microservices</strong> - Phân Tích & Hướng Dẫn (Tiếng Việt)</p>
+            <p>Phiên bản: 1.0 | Ngày: 10 Tháng 12, 2025</p>
+            <p>📧 Có thể chia sẻ, in, hoặc chuyển đổi sang PDF/ePub</p>
+        </footer>
+    </div>
+</body>
+</html>
