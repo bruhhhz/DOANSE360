@@ -763,6 +763,81 @@ terraform plan -out=tfplan</pre>
                 <pre>terraform output
 # Test services
 curl http://user-service-dev-....eastus.azurecontainers.io:3000/healthz</pre>
+                
+                <h3>Chi tiết test Module D (Observability)</h3>
+                <p>Các bước kiểm tra chi tiết để xác nhận instrumentation, dashboard, alarms và synthetic tests.</p>
+
+                <h4>1. Kiểm tra metrics (local → CloudWatch)</h4>
+                <p>Nếu chạy local, kiểm tra stdout của service (payment/trip) để tìm các dòng EMF JSON (có trường <code>&quot;_aws&quot;</code>).</p>
+                <pre>{
+  "_aws": {...},
+  "Service": "payment-service",
+  "PaymentAttemptCount": 1,
+  "PaymentSuccessCount": 1,
+  "PaymentDurationMs": 150
+}</pre>
+                <p>Trên AWS, mở CloudWatch → Metrics → Namespace <code>UITGo/SLI</code> và xác nhận có các metrics: <code>PaymentAttemptCount</code>, <code>PaymentSuccessCount</code>, <code>MatchLatencyMs</code>, <code>BookingAttemptCount</code>.</p>
+
+                <h4>2. Kiểm tra Dashboard</h4>
+                <ul>
+                    <li>Mở CloudWatch → Dashboards → <code>UITGo-SLO-Dashboard</code>.</li>
+                    <li>Xác nhận widget <em>Payment Success Rate</em> hiển thị dữ liệu và biểu thức metric math trả tỷ lệ.</li>
+                    <li>Xác nhận widget <em>Match API p95 Latency</em> hiển thị p95 của <code>MatchLatencyMs</code>.</li>
+                </ul>
+
+                <h4>3. Kiểm tra Alarms &amp; SNS</h4>
+                <ul>
+                    <li>Trong CloudWatch → Alarms, tìm alarm Payment Success Rate và kiểm tra trạng thái.</li>
+                    <li>Nếu đã subscribe email/HTTP, kiểm tra inbox hoặc endpoint nhận thông báo SNS.</li>
+                </ul>
+
+                <h4>4. Chạy synthetic test (chi tiết)</h4>
+                <p>Payment synthetic (PowerShell):</p>
+                <pre>cd scripts
+.\synthetic-payment-test.ps1 -Count 500 -IntervalSeconds 0.05 -Url "http://localhost:3004/payments" -TimeoutSeconds 5</pre>
+                <p>Ghi nhận CSV output và tính: success rate, p50, p95, avg. Có thể tăng độ tải để stress test và quan sát alarm/metrics.</p>
+
+                <h4>5. Troubleshooting nhanh</h4>
+                <ul>
+                    <li>Nếu không thấy EMF logs: kiểm tra package <code>aws-embedded-metrics</code> đã cài và <code>metrics.js</code> được gọi.</li>
+                    <li>Nếu metric không xuất: kiểm tra IAM permissions (PutMetricData) và CloudWatch Logs có EMF JSON hay không.</li>
+                    <li>Nếu alarm không firing: kiểm tra window/evaluation và metric math expression.</li>
+                </ul>
+
+                <h3>Chi tiết test Module E (Deployment &amp; IaC)</h3>
+                <p>Bước kiểm tra chi tiết khi deploy bằng Terraform lên Azure và xác minh ACI services.</p>
+
+                <h4>1. Kiểm tra remote state (nếu dùng)</h4>
+                <p>Nếu cấu hình backend azurerm, xác nhận storage account/container tồn tại và file state được ghi.</p>
+                <pre># Kiểm tra blob state (Azure CLI)
+az storage blob list --account-name tfstatesa --container-name tfstate --query [].name</pre>
+
+                <h4>2. Plan &amp; Apply an toàn</h4>
+                <pre>cd terraform/envs/dev
+terraform init
+terraform validate
+terraform plan -out=tfplan
+terraform apply tfplan</pre>
+
+                <h4>3. Verify ACI services</h4>
+                <p>Dùng <code>terraform output</code> hoặc Azure Portal để lấy FQDN/IP và kiểm tra health endpoint:</p>
+                <pre>curl http://&lt;user-fqdn&gt;:3000/healthz
+curl http://&lt;trip-fqdn&gt;:3000/healthz
+curl http://&lt;driver-fqdn&gt;:8000/healthz
+curl http://&lt;payment-fqdn&gt;:3004/healthz</pre>
+
+                <h4>4. Kiểm tra image &amp; registry</h4>
+                <pre>az acr repository show --name uitgoacrdev --repository trip-service</pre>
+
+                <h4>5. Security &amp; Networking checks</h4>
+                <ul>
+                    <li>Kiểm tra biến môi trường (secrets) lấy từ Key Vault nếu cấu hình.</li>
+                    <li>Kiểm tra firewall/NSG nếu ACI ở private network.</li>
+                </ul>
+
+                <h4>6. Rollback &amp; Cleanup</h4>
+                <pre>cd terraform/envs/dev
+terraform destroy -auto-approve</pre>
             </section>
             
             <!-- Conclusion Section -->

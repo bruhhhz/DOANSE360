@@ -741,6 +741,121 @@ curl http://user-service-dev-....eastus.azurecontainers.io:3000/healthz
 
 ---
 
+### Chi tiết test Module D (Observability)
+
+Phần này mô tả các bước kiểm tra chi tiết để xác nhận instrumentation, dashboard, alarms và synthetic tests.
+
+#### 1. Kiểm tra metrics (local -> CloudWatch)
+
+- Nếu chạy local, kiểm tra stdout của service (payment/trip) để tìm các dòng EMF JSON (có trường `"_aws"`). Ví dụ:
+
+```json
+{
+  "_aws": {...},
+  "Service": "payment-service",
+  "PaymentAttemptCount": 1,
+  "PaymentSuccessCount": 1,
+  "PaymentDurationMs": 150
+}
+```
+
+- Trên AWS (nếu đã apply Terraform), vào CloudWatch → Metrics → Namespace `UITGo/SLI` và xác nhận có các metrics: `PaymentAttemptCount`, `PaymentSuccessCount`, `MatchLatencyMs`, `BookingAttemptCount`.
+
+#### 2. Kiểm tra Dashboard
+
+- Mở CloudWatch → Dashboards → `UITGo-SLO-Dashboard`.
+- Xác nhận widget `Payment Success Rate` hiển thị data (một hoặc nhiều series) và biểu thức metric math trả tỷ lệ.
+- Xác nhận widget `Match API p95 Latency` hiển thị p95 của `MatchLatencyMs`.
+
+#### 3. Kiểm tra Alarms & SNS
+
+- Trong CloudWatch → Alarms, tìm `uitgo-PaymentSuccessRate-Alarm` (hoặc tên tương tự). Kiểm tra trạng thái (OK/ALARM).
+- Nếu đã subscribe email/HTTP, kiểm tra inbox hoặc endpoint để xác nhận SNS notification.
+
+#### 4. Chạy synthetic test (chi tiết)
+
+- Payment synthetic (PowerShell):
+
+```powershell
+cd scripts
+.\synthetic-payment-test.ps1 -Count 500 -IntervalSeconds 0.05 -Url "http://localhost:3004/payments" -TimeoutSeconds 5
+```
+
+- Ghi nhận CSV output (`synthetic-payment-results-<timestamp>.csv`) và tính: success rate, p50, p95, avg.
+- Nếu muốn stress: tăng `-Count` và giảm `-IntervalSeconds` dần, theo dõi metric `PaymentDurationMs` và alarm.
+
+#### 5. Troubleshooting nhanh
+
+- Nếu không thấy EMF logs: kiểm tra package `aws-embedded-metrics` đã cài và code `metrics.js` được gọi.
+- Nếu Metric không xuất lên CloudWatch: kiểm tra IAM permissions (PutMetricData) và xem CloudWatch Logs có chứa EMF JSON hay không.
+- Nếu alarm không firing mặc dù metric giảm: kiểm tra window/evaluation và metric mathexpression (m1/m2).
+
+### Chi tiết test Module E (Deployment & IaC)
+
+Phần này mô tả bước kiểm tra chi tiết khi deploy bằng Terraform lên Azure và xác minh ACI services.
+
+#### 1. Kiểm tra remote state (nếu dùng)
+
+- Nếu cấu hình backend `azurerm`, xác nhận storage account/container tồn tại và file state được ghi.
+- Lệnh kiểm tra:
+
+```bash
+# Kiểm tra blob state (Azure CLI)
+az storage blob list --account-name tfstatesa --container-name tfstate --query [].name
+```
+
+#### 2. Plan & Apply an toàn
+
+```bash
+cd terraform/envs/dev
+terraform init
+terraform validate
+terraform plan -out=tfplan
+terraform apply tfplan
+```
+
+- Kỳ vọng: các resource (ACI container groups) được tạo. Lưu giữ `terraform output` để lấy FQDN/IP.
+
+#### 3. Verify ACI services
+
+- Dùng `terraform output` hoặc Azure Portal để lấy FQDN/IP.
+- Kiểm tra health endpoint của từng service:
+
+```bash
+curl http://<user-fqdn>:3000/healthz
+curl http://<trip-fqdn>:3000/healthz
+curl http://<driver-fqdn>:8000/healthz
+curl http://<payment-fqdn>:3004/healthz
+```
+
+- Nếu service không respond: kiểm tra Azure Container Group logs (Azure Portal → Container group → Logs) và xem output container.
+
+#### 4. Kiểm tra image & registry
+
+- Xác nhận image đã push tới ACR:
+
+```bash
+az acr repository show --name uitgoacrdev --repository trip-service
+```
+
+- Nếu image không tồn tại: chạy build & push (xem phần Dockerfile & Build & Push phía trên).
+
+#### 5. Security & Networking checks
+
+- Kiểm tra môi trường biến (secrets) được lấy từ Key Vault nếu cấu hình.
+- Kiểm tra firewall/Azure NSG nếu ACI ở private network.
+
+#### 6. Rollback & Cleanup
+
+- Để gỡ resource sau test:
+
+```bash
+cd terraform/envs/dev
+terraform destroy -auto-approve
+```
+
+---
+
 ## 🎯 Kết Luận & Đề Xuất
 
 ### Trip Service - Đánh Giá
