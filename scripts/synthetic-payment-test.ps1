@@ -33,7 +33,13 @@ $results = @()
 Write-Host "Running synthetic payment test: Count=$Count, IntervalSeconds=$IntervalSeconds, Url=$Url" -ForegroundColor Cyan
 
 for ($i = 1; $i -le $Count; $i++) {
-    $bodyObj = @{ amount = Get-Random -Minimum 100 -Maximum 20000; userId = "synthetic-user" }
+    $bodyObj = @{ 
+        amount = Get-Random -Minimum 100 -Maximum 20000
+        trip_id = 1
+        user_id = 1
+        payment_method = "card"
+        currency = "VND"
+    }
     $body = $bodyObj | ConvertTo-Json
 
     $sw = [System.Diagnostics.Stopwatch]::StartNew()
